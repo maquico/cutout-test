@@ -9,6 +9,8 @@ readme = "README.md"
 python = "^3.12"
 torch = "^2.2.2"
 tqdm = "^4.66.2"
+numpy = "^1.26.4"
+torchvision = "^0.17.2"
 
 
 [build-system]
