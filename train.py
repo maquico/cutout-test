@@ -1,11 +1,19 @@
+# run train.py --dataset cifar10 --model resnet18 --data_augmentation --cutout --length 16
+# run train.py --dataset cifar100 --model resnet18 --data_augmentation --cutout --length 8
+# run train.py --dataset svhn --model wideresnet --learning_rate 0.01 --epochs 160 --cutout --length 20
+
+import pdb
 import argparse
 import numpy as np
 from tqdm import tqdm
 
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
+import torch.backends.cudnn as cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
+from torchvision.utils import make_grid
 from torchvision import datasets, transforms
 
 from csv_logger import CSVLogger
@@ -37,12 +45,18 @@ if __name__ == '__main__':
                         help='number of holes to cut out from image')
     parser.add_argument('--length', type=int, default=16,
                         help='length of the holes')
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='enables CUDA training')
     parser.add_argument('--seed', type=int, default=0,
                         help='random seed (default: 1)')
 
     args = parser.parse_args()
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    cudnn.benchmark = True  # Should make training should go faster for large models
 
     torch.manual_seed(args.seed)
+    if args.cuda:
+        torch.cuda.manual_seed(args.seed)
 
     test_id = args.dataset + '_' + args.model
 
@@ -64,6 +78,7 @@ if __name__ == '__main__':
     train_transform.transforms.append(normalize)
     if args.cutout:
         train_transform.transforms.append(Cutout(n_holes=args.n_holes, length=args.length))
+
 
     test_transform = transforms.Compose([
         transforms.ToTensor(),
@@ -137,7 +152,8 @@ if __name__ == '__main__':
             cnn = WideResNet(depth=28, num_classes=num_classes, widen_factor=10,
                             dropRate=0.3)
 
-    criterion = nn.CrossEntropyLoss()
+    cnn = cnn.cuda()
+    criterion = nn.CrossEntropyLoss().cuda()
     cnn_optimizer = torch.optim.SGD(cnn.parameters(), lr=args.learning_rate,
                                     momentum=0.9, nesterov=True, weight_decay=5e-4)
 
@@ -146,7 +162,10 @@ if __name__ == '__main__':
     else:
         scheduler = MultiStepLR(cnn_optimizer, milestones=[60, 120, 160], gamma=0.2)
 
-    filename = 'logs/' + test_id + '.csv'
+    if args.cutout == True:
+        filename = 'logs/' + test_id + '.csv'
+    else:
+        filename = 'logs/' + test_id + 'nc.csv'
     csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
 
 
@@ -155,6 +174,8 @@ if __name__ == '__main__':
         correct = 0.
         total = 0.
         for images, labels in loader:
+            images = images.cuda()
+            labels = labels.cuda()
 
             with torch.no_grad():
                 pred = cnn(images)
@@ -177,6 +198,9 @@ if __name__ == '__main__':
         progress_bar = tqdm(train_loader)
         for i, (images, labels) in enumerate(progress_bar):
             progress_bar.set_description('Epoch ' + str(epoch))
+
+            images = images.cuda()
+            labels = labels.cuda()
 
             cnn.zero_grad()
             pred = cnn(images)
@@ -206,5 +230,8 @@ if __name__ == '__main__':
         row = {'epoch': str(epoch), 'train_acc': str(accuracy), 'test_acc': str(test_acc)}
         csv_logger.writerow(row)
 
-    torch.save(cnn.state_dict(), 'checkpoints/' + test_id + '.pt')
+    if args.cutout == True:
+        torch.save(cnn.state_dict(), 'checkpoints/' + test_id + '.pt')
+    else:
+        torch.save(cnn.state_dict(), 'checkpoints/' + test_id + 'nc.pt')
     csv_logger.close()
