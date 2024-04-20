@@ -13,12 +13,42 @@ Este proyecto implementa la técnica de regularización conocida como Cutout en 
 
 ## Installation
 
-Install my-project with npm
+
+## Installation
+
+Instalar Poetry para gestionar las dependencias del proyecto de manera eficiente.
 
 ```bash
-  npm install my-project
-  cd my-project
+  pip install poetry
 ```
+
+Activar el entorno virtual creado por Poetry para aislar las dependencias del proyecto.
+
+```bash
+  poetry shell
+```
+Instalar las dependencias del proyecto especificadas en el archivo pyproject.toml.
+
+```bash
+  poetry install
+```
+Crear la carpeta 'data' en el directorio raíz del proyecto. Esta carpeta se utilizará para almacenar los datos del conjunto de datos CIFAR-100 y cualquier otro dato necesario para el entrenamiento.
+
+```bash
+  mkdir data
+```
+
+**Entrenar el modelo utilizando la técnica de Cutout.**
+```bash
+  python train.py --dataset cifar100 --model resnet18 --data_augmentation --cutout --length 8
+```
+Este comando inicia el entrenamiento del modelo ResNet18 utilizando el conjunto de datos CIFAR-100 y aplicando la técnica de regularización Cutout con una longitud de 8, lo que recorta regiones aleatorias de las imágenes para mejorar la generalización y evitar el sobreajuste.
+
+**Entrenar el modelo sin aplicar la técnica de Cutout.**
+```bash
+  python train.py --dataset cifar100 --model resnet18 --data_augmentation --length 8
+```
+Este comando entrena el modelo ResNet18 sin aplicar la técnica de Cutout en el conjunto de datos CIFAR-100. Es útil para comparar el rendimiento del modelo con y sin la técnica de regularización Cutout.
 
   
 
