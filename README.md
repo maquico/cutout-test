@@ -13,9 +13,6 @@ Este proyecto implementa la técnica de regularización conocida como Cutout en 
 
 ## Installation
 
-
-## Installation
-
 Instalar Poetry para gestionar las dependencias del proyecto de manera eficiente.
 
 ```bash
