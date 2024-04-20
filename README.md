@@ -1,4 +1,4 @@
-# Convolutional Neural Networks with Cutout
+# Convolutional Neural Networks (CNN) with Cutout
 
 Este proyecto implementa la técnica de regularización conocida como Cutout en redes neuronales convolucionales utilizando el conjunto de datos CIFAR-100 y la arquitectura ResNet18. La técnica de Cutout consiste en recortar regiones aleatorias de las imágenes durante el entrenamiento para mejorar la generalización y mitigar el sobreajuste en el modelo.
 
